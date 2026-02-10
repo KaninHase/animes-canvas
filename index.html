@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<!-- Be aware: this file must be ES5, capable to be loaded in IE11. It is not transpiled. -->
+<html lang="en">
+<head>
+    <title>mental canvas viewer</title>
+    <meta charset="utf-8" />
+    <script>
+        (function () {
+            // UNIQUE TO SHELL / EXPORT
+            var urlOptionsStr = window.location.search.replace(/^\?/, '').split('&');
+            var urlOptions /* : { [key: string]: string } */ = {};
+            // Convert to a key/value dictionary.
+            for (var i = 0; i < urlOptionsStr.length; ++i) {
+                var item = urlOptionsStr[i];
+                var equalsPos = item.indexOf('=');
+                if (equalsPos > 0)
+                    urlOptions[item.substr(0, equalsPos)] = decodeURIComponent(item.substr(equalsPos + 1));
+                else
+                    urlOptions[item] = 'true';
+            }
+            var baseUrls = {
+                production: 'https://mentalcanvas.com/viewer/',
+                alpha: 'https://mentalcanvas.com/viewerAlpha/',
+                debug: 'http://localhost:8080/'
+            };
+
+            // Neither the release= nor version= URL parameters are in use at this time, but they
+            // are included in case necessary in future.
+            let release = 'production';
+            if (urlOptions.hasOwnProperty('release') && baseUrls.hasOwnProperty(urlOptions['release'])) {
+                release = urlOptions['release']
+            }
+            const versionID = '3';
+            let version = versionID + '-latest';
+            if (urlOptions.hasOwnProperty('version')) {
+                version = urlOptions['version'];
+            }
+            var filename = 'mcviewer-shell-' + version + '.bundle.js';
+
+            var scriptElem = document.createElement('script');
+            scriptElem.type = 'text/javascript';
+            document.head.appendChild(scriptElem);
+            scriptElem.onload = function () {
+                MentalCanvasShell.default.startup({baseUrl: baseUrls[release]});
+            };
+            if (release === 'debug') {
+                scriptElem.onerror = function () {
+                    release = 'alpha';
+                    console.log('No debug webviewer found. Falling back to alpha version.');
+                    let scriptElem2 = document.createElement('script');
+                    scriptElem2.type = 'text/javascript';
+                    document.head.appendChild(scriptElem2);
+                    scriptElem2.onload = scriptElem.onload;
+                    scriptElem2.src = baseUrls[release] + filename;
+                };
+            }
+            scriptElem.src = baseUrls[release] + filename;
+        })();
+    </script>
+</head>
+<body>
+</body>
+</html>
